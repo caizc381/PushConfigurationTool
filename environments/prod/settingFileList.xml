@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <settings>
-	<serverList>182.254.130.221</serverList>
+	<serverList>182.254.130.221,stage.mytijian.com</serverList>
 	<file operation="copy">
 		<name>config.properties</name>
 		<servers>ALL</servers>
