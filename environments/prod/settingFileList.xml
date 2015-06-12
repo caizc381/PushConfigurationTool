@@ -4,6 +4,6 @@
 	<file operation="copy">
 		<name>config.properties</name>
 		<servers>ALL</servers>
-		<destination></destination>
+		<destination>config</destination>
 	</file>
 </settings>
