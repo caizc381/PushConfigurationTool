@@ -17,7 +17,7 @@
 		</not>
 	</condition>
 	<!-- <property name="deploy.dir" value="D:/software/apache-tomcat-7.0.62/webapps" /> -->
-	<property name="deploy.dir" value="/home/ubuntu/tools/apache-tomcat-8.0.23/webapps" />
+	<property name="deploy.dir" value="/home/ubuntu/tools" />
 	<property name="just.local" value="false" />
 	<property name="project.name" value="configFolder" />
 	<property name="local.temp.work.dir" value="${basedir}/temp" />
