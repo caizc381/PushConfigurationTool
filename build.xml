@@ -1,0 +1,175 @@
+<project name="build-deploy-setting" basedir="." default="run-deploy-setting">
+
+	<!-- <property name="git.tasks.macro" location="../macrodefs/git-tasks.xml" />
+	<import file="${git.tasks.macro}" /> -->
+
+	<property name="urlRepos" value="https://github.com/caizc381/PushConfigurationTool.git" />
+	<property name="urlRepos_ShangHai_DEV62" value="https://scsvn01.dev.activenetwork.com/svn/mv-g3/cloud2/trunk/AutoBuild/ShangHai_DEV62/" />
+	<property name="config" value="environments/prod" />
+	<!-- <property name="deploy.dir" value="D:/software/apache-tomcat-7.0.62/webapps" /> -->
+	<property name="deploy.dir" value="/home/ubuntu/tools/apache-tomcat-8.0.23/webapps" />
+	<property name="just.local" value="false" />
+	<property name="project.name" value="configFolder" />
+	<property name="local.temp.work.dir" value="${basedir}/temp" />
+	<property name="source.dir" value="${basedir}/${project.name}/${config}" />
+	<property name="file.list.xml" value="${basedir}/${project.name}/${config}/settingFileList.xml" />
+
+	<condition property="isWindows">
+		<os family="windows" />
+	</condition>
+
+	<target name="init">
+		<taskdef resource="net/sf/antcontrib/antlib.xml">
+			<classpath>
+				<fileset dir="${basedir}/lib">
+					<include name="ant-contrib.jar" />
+				</fileset>
+			</classpath>
+		</taskdef>
+
+		<taskdef name="xmltask" classname="com.oopsconsultancy.xmltask.ant.XmlTask" classpath="${basedir}/lib/xmltask-v1.15.1.jar">
+			<classpath>
+				<pathelement path="${basedir}/lib/xmltask-v1.15.1.jar" />
+				<pathelement path="${basedir}/lib/xalan-2.7.1.jar" />
+			</classpath>
+		</taskdef>
+
+		<macrodef name="git">
+			<attribute name="command" />
+			<attribute name="dir" default="" />
+			<element name="args" optional="true" />
+			<sequential>
+				<echo file="GIT_COMMAND_LOG" message="git @{command} &#xa;" append="yes" />
+				<exec executable="git" dir="@{dir}">
+					<arg value="@{command}" />
+					<args />
+				</exec>
+			</sequential>
+		</macrodef>
+
+		<macrodef name="git-clone-pull">
+			<attribute name="repository" />
+			<attribute name="dest" />
+			<sequential>
+				<git command="clone">
+					<args>
+						<arg value="@{repository}" />
+						<arg value="@{dest}" />
+					</args>
+				</git>
+				<git command="pull" dir="@{dest}" />
+			</sequential>
+		</macrodef>
+
+		<macrodef name="trim">
+			<attribute name="property" />
+			<attribute name="input" />
+			<sequential>
+				<propertyregex property="@{property}" input="@{input}" regexp="[\s]*(.+)[\s]*" select="\1" defaultvalue="@{input}" override="true" />
+			</sequential>
+		</macrodef>
+
+	</target>
+	<target name="clean-all" depends="init">
+		<echo>${basedir}/${project.name}</echo>
+		<echo>${local.temp.work.dir}</echo>
+		<delete dir="${basedir}/${project.name}" />
+		<delete dir="${local.temp.work.dir}" />
+	</target>
+
+	<target name="checkout" depends="clean-all">
+		<git-clone-pull repository="${urlRepos}" dest="${project.name}" />
+	</target>
+
+	<target name="run-deploy-setting" depends="checkout">
+		<mkdir dir="${local.temp.work.dir}" />
+		<xmltask source="${file.list.xml}">
+			<call path="/settings/file[@operation='copy']" target="run-copy-file">
+				<param name="serverList" path="/settings/serverList/text()" />
+				<param name="filename" path="name/text()" />
+				<param name="servers" path="servers/text()" />
+				<param name="destination" path="destination/text()" />
+				<param name="rename" path="rename/text()" default="" />
+			</call>
+		</xmltask>
+		<delete dir="${local.temp.work.dir}" />
+	</target>
+
+	<target name="run-copy-file">
+		<echo>${destination}</echo>
+		<property name="target.absolute.dir" location="${deploy.dir}/${destination}" />
+		<antcallback target="do-copy-file-workfolder" return="shortname" />
+
+		<condition property="scondition">
+			<equals arg1="${rename}" arg2="" />
+		</condition>
+		<antcallback target="do-rename-file" return="shortname" />
+
+		<condition property="localcondition">
+			<equals arg1="${just.local}" arg2="true" />
+		</condition>
+		<antcall target="copy-file-to-local" />
+		<antcall target="copy-file-to-server" />
+	</target>
+
+	<target name="copy-file-to-local" if="localcondition">
+		<property name="source.absolute.path" location="${local.temp.work.dir}/${shortname}" />
+		<echo message="Copy ${source.absolute.path} to ${target.absolute.dir}" />
+		<copy tofile="${target.absolute.dir}/${shortname}" overwrite="yes" file="${source.absolute.path}" />
+	</target>
+
+	<target name="copy-file-to-server" unless="localcondition">
+		<condition property="fcondition">
+			<equals arg1="${servers}" arg2="ALL" />
+		</condition>
+		<antcall target="do-copy-file-to-all-servers" />
+		<antcall target="do-copy-file-to-servers" />
+	</target>
+
+	<target name="do-copy-file-to-all-servers" if="fcondition">
+		<for list="${serverList}" param="letter">
+			<sequential>
+				<trim property="server" input="@{letter}" />
+				<antcall target="do-upload-files" />
+			</sequential>
+		</for>
+	</target>
+
+	<target name="do-copy-file-to-servers" unless="fcondition">
+		<for list="${servers}" param="letter">
+			<sequential>
+				<trim property="server" input="@{letter}" />
+				<antcall target="do-upload-files" />
+			</sequential>
+		</for>
+	</target>
+
+	<target name="do-copy-file-workfolder">
+		<propertyregex property="shortname" input="${filename}" regexp=".*/" replace="" defaultvalue="${filename}" />
+		<echo message="Copy ${filename} to work folder" />
+		<copy todir="${local.temp.work.dir}" overwrite="yes">
+			<fileset dir="${source.dir}/FileList" includes="${filename}" />
+		</copy>
+	</target>
+
+	<target name="do-rename-file" unless="scondition">
+		<echo message="Rename ${shortname} to ${rename}" />
+		<rename src="${local.temp.work.dir}/${shortname}" dest="${local.temp.work.dir}/${rename}" />
+		<propertycopy property="shortname" from="rename" override="true" />
+	</target>
+
+	<target name="do-upload-files">
+		<echo>Copy ${shortname} to ${server} at ${target.absolute.dir}</echo>
+		<antcall target="os.difference" />
+	</target>
+
+	<target name="doWindows" if="isWindows">
+		<echo>You may need to setup a share folder for
+			${local.temp.work.dir}/${shortname}
+		</echo>
+	</target>
+	<target name="doUnixLike" unless="isWindows">
+		 <scp file="${local.temp.work.dir}/${shortname}" todir="ubuntu@${server}:${target.absolute.dir}" keyfile="${user.home}/.ssh/id_rsa" trust="true" />		
+	</target>
+	<target name="os.difference" depends="doWindows,doUnixLike" />
+</project>
