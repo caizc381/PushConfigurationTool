@@ -6,4 +6,10 @@
 		<servers>ALL</servers>
 		<destination>config</destination>
 	</file>
+	<file operation="copy">
+		<name>sutadmin.properties</name>
+		<servers>ALL</servers>
+		<destination>sutadmin</destination>
+		<rename>seeuthere.properties</rename>
+	</file>	
 </settings>
