@@ -5,7 +5,16 @@
 
 	<property name="urlRepos" value="https://github.com/caizc381/PushConfigurationTool.git" />
 	<property name="urlRepos_ShangHai_DEV62" value="https://scsvn01.dev.activenetwork.com/svn/mv-g3/cloud2/trunk/AutoBuild/ShangHai_DEV62/" />
-	<property name="config" value="environments/prod" />
+	<property name="environment.test" value="true" />
+	<condition property="config" value="environments/test">
+		<equals arg1="${environment.test}" arg2="true" />
+	</condition>
+
+	<condition property="config" value="environments/prod">
+		<not>
+			<equals arg1="${environment.test}" arg2="true" />
+		</not>
+	</condition>
 	<!-- <property name="deploy.dir" value="D:/software/apache-tomcat-7.0.62/webapps" /> -->
 	<property name="deploy.dir" value="/home/ubuntu/tools/apache-tomcat-8.0.23/webapps" />
 	<property name="just.local" value="false" />
