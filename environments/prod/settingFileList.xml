@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <settings>
-	<serverList>10.10.0.2</serverList>
+	<serverList>182.254.130.221</serverList>
 	<file operation="copy">
 		<name>config.properties</name>
 		<servers>ALL</servers>
