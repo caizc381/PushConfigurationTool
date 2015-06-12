@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+	<serverList>10.10.0.2</serverList>
+	<file operation="copy">
+		<name>config.properties</name>
+		<servers>ALL</servers>
+		<destination></destination>
+	</file>
+</settings>
