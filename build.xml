@@ -5,7 +5,7 @@
 
 	<property name="urlRepos" value="https://github.com/caizc381/PushConfigurationTool.git" />
 	<property name="urlRepos_ShangHai_DEV62" value="https://scsvn01.dev.activenetwork.com/svn/mv-g3/cloud2/trunk/AutoBuild/ShangHai_DEV62/" />
-	<property name="environment.test" value="true" />
+	<property name="environment.test" value="false" />
 	<!-- <property name="config" value="environments/test" /> -->
 	<condition property="config" value="environments/test">
 		<equals arg1="${environment.test}" arg2="true" />
@@ -179,6 +179,7 @@
 		</echo>
 	</target>
 	<target name="doUnixLike" unless="isWindows">
+		<echo>${target.absolute.dir}</echo>
 		 <scp file="${local.temp.work.dir}/${shortname}" todir="ubuntu@${server}:${target.absolute.dir}" keyfile="${user.home}/.ssh/id_rsa" trust="true" />		
 	</target>
 	<target name="os.difference" depends="doWindows,doUnixLike" />
