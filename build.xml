@@ -76,8 +76,6 @@
 
 	</target>
 	<target name="clean-all" depends="init">
-		<echo>${basedir}/${project.name}</echo>
-		<echo>${local.temp.work.dir}</echo>
 		<delete dir="${basedir}/${project.name}" />
 		<delete dir="${local.temp.work.dir}" />
 	</target>
@@ -101,7 +99,6 @@
 	</target>
 
 	<target name="run-copy-file">
-		<echo>${destination}</echo>
 		<property name="target.absolute.dir" location="${deploy.dir}/${destination}" />
 		<antcallback target="do-copy-file-workfolder" return="shortname" />
 
