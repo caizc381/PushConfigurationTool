@@ -2,15 +2,14 @@
 
 
 	<property name="urlRepos" value="https://github.com/caizc381/PushConfigurationTool.git" />
-	<property name="environment.test" value="false" />
-	<condition property="config" value="environments/test">
-		<equals arg1="${environment.test}" arg2="true" />
+	<property name="environment.test" value="environment/crm-test" />
+	<condition property="config" value="environments/crm-test">
+		<equals arg1="${environment.test}" arg2="environment/crm-test" />
 	</condition>
 
-	<condition property="config" value="environments/prod">
-		<not>
-			<equals arg1="${environment.test}" arg2="true" />
-		</not>
+	<condition property="config" value="environments/mytijian-test">
+			<equals arg1="${environment.test}" arg2="environments/mytijian-test" />
+	
 	</condition>
 	<property name="deploy.dir" value="/home/ubuntu/tools" />
 	<property name="just.local" value="true" />
