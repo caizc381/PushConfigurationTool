@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+	 <serverList>10.10.0.28</serverList> 
+	<!-- <serverList>stage.mytijian.com</serverList> -->
+	<file operation="copy">
+		<name>config.properties</name>
+		<servers>ALL</servers>
+		<destination>crm/WEB-INF/classes/</destination>
+	</file>
+</settings>
