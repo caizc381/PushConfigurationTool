@@ -1,19 +1,18 @@
 <project name="build-deploy-setting" basedir="." default="run-deploy-setting">
 
-
-	<property name="urlRepos" value="https://github.com/caizc381/PushConfigurationTool.git" />
+	<property name="urlRepos" value="git@git.mytijian.cn:zhchcai/PushConfigurationTool.git" />
 	<property name="environment.test" value="environment/crm-test" />
+
 	<condition property="config" value="environments/crm-test">
-		<equals arg1="${environment.test}" arg2="environment/crm-test" />
+		<equals arg1="${environment.test}" arg2="environments/crm-test" />
 	</condition>
 
 	<condition property="config" value="environments/mytijian-test">
-			<equals arg1="${environment.test}" arg2="environments/mytijian-test" />
-	
+		<equals arg1="${environment.test}" arg2="environments/mytijian-test" />
 	</condition>
-	<property name="deploy.dir" value="/home/ubuntu/tools" />
+	<property name="deploy.dir" value="/opt/apache-tomcat-8.0.23/webapps/" />
 	<property name="just.local" value="true" />
-	<property name="project.name" value="configFolder" />
+	<property name="project.name" value="PushConfigurationTool" />
 	<property name="local.temp.work.dir" value="${basedir}/temp" />
 	<property name="source.dir" value="${basedir}/${project.name}/${config}" />
 	<property name="file.list.xml" value="${basedir}/${project.name}/${config}/settingFileList.xml" />
@@ -65,6 +64,36 @@
 			</sequential>
 		</macrodef>
 
+		<macrodef name="git-checkout-local">
+			<attribute name="branch" />
+			<attribute name="dir" />
+			<attribute name="options" default="" />
+			<attribute name="failerror" default="false" />
+			<sequential>
+					<git command="checkout" dir="@{dir}">
+					<args>
+						<arg value="@{branch}" />
+					</args>
+				</git>
+			</sequential>
+		</macrodef>
+
+		<macrodef name="git-checkout">
+			<attribute name="branch" />
+			<attribute name="targetbranch" />
+			<attribute name="dir" />
+			<attribute name="options" default="" />
+			<attribute name="failerror" default="false" />
+			<sequential>
+				<git command="checkout" dir="@{dir}" options="@{options}" failerror="@{failerror}">
+					<args>
+						<arg value="@{branch}" />
+						<arg value="-b@{targetbranch}" />
+					</args>
+				</git>
+			</sequential>
+		</macrodef>
+
 		<macrodef name="trim">
 			<attribute name="property" />
 			<attribute name="input" />
@@ -75,12 +104,18 @@
 
 	</target>
 	<target name="clean-all" depends="init">
+		<echo>${basedir}/${project.name}</echo>
+		<echo>${local.temp.work.dir}</echo>
 		<delete dir="${basedir}/${project.name}" />
 		<delete dir="${local.temp.work.dir}" />
 	</target>
 
-	<target name="checkout" depends="clean-all">
+	<target name="clone" depends="clean-all">
 		<git-clone-pull repository="${urlRepos}" dest="${project.name}" />
+	</target>
+
+	<target name="checkout" depends="clone">
+		<git-checkout-local branch="develop" dir="${project.name}"/> 
 	</target>
 
 	<target name="run-deploy-setting" depends="checkout">
@@ -98,6 +133,7 @@
 	</target>
 
 	<target name="run-copy-file">
+		<echo>${destination}</echo>
 		<property name="target.absolute.dir" location="${deploy.dir}/${destination}" />
 		<antcallback target="do-copy-file-workfolder" return="shortname" />
 
@@ -117,6 +153,10 @@
 		<property name="source.absolute.path" location="${local.temp.work.dir}/${shortname}" />
 		<echo message="Copy ${source.absolute.path} to ${target.absolute.dir}" />
 		<copy tofile="${target.absolute.dir}/${shortname}" overwrite="yes" file="${source.absolute.path}" />
+		
+		<echo>target.absolute.dir : ${target.absolute.dir} </echo>
+		<echo>shortname : ${shortname} </echo>
+		<echo>source.absolute.path : ${source.absolute.path}</echo>
 	</target>
 
 	<target name="copy-file-to-server" unless="localcondition">
@@ -170,9 +210,9 @@
 		</echo>
 	</target>
 	<target name="doUnixLike" unless="isWindows">
-		<echo>${target.absolute.dir}</echo>
+		<echo>${user.home}</echo>
 		<sshexec command="mkdir -p ${target.absolute.dir}" username="ubuntu" keyfile="${user.home}/.ssh/id_rsa" host="${server}" trust="true" />
-		 <scp file="${local.temp.work.dir}/${shortname}" todir="ubuntu@${server}:${target.absolute.dir}" keyfile="${user.home}/.ssh/id_rsa" trust="true" />		
+		<scp file="${local.temp.work.dir}/${shortname}" remoteTofile="ubuntu@${server}:${target.absolute.dir}/${shortname}" keyfile="${user.home}/.ssh/id_rsa" trust="true" />
 	</target>
 	<target name="os.difference" depends="doWindows,doUnixLike" />
 </project>
